@@ -6,33 +6,38 @@ from urllib.parse import urlparse
 
 
 LINK_API_BITLY = 'https://api-ssl.bitly.com/v4/'
-load_dotenv()
-TOKEN = os.getenv("BITLY_TOKEN")
-HEADERS = {
-    'Authorization': f'Bearer {TOKEN}'
-}
 
 
 def shorten_links(url, headers):
     url_for_shorten = {
-        'long_url': f'{url}'
+        'long_url': url
     }
-    short_link = requests.post(f'{LINK_API_BITLY}shorten', headers=headers, json=url_for_shorten)
-    short_link.raise_for_status()
-    return short_link.json()['id']
+    response_a_shorten_link = requests.post(
+        f'{LINK_API_BITLY}shorten',
+        headers=headers,
+        json=url_for_shorten
+    )
+    response_a_shorten_link.raise_for_status()
+    return response_a_shorten_link.json()['id']
 
 
 def count_clicks(bitlink, headers):
     parse_url = urlparse(bitlink)
-    response_number_of_clicks_on_bitlink = requests.get(f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}{parse_url.path}/clicks/summary', headers=headers)
-    response_number_of_clicks_on_bitlink.raise_for_status()
-    return response_number_of_clicks_on_bitlink.json()['total_clicks']
+    response_clicks_summary_for_a_bitlink = requests.get(
+        f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}'
+        f'{parse_url.path}/clicks/summary', headers=headers
+    )
+    response_clicks_summary_for_a_bitlink.raise_for_status()
+    return response_clicks_summary_for_a_bitlink.json()['total_clicks']
 
 
 def is_bitlink(url, headers):
     parse_url = urlparse(url)
-    check_url = requests.get(f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}{parse_url.path}', headers=headers)
-    return check_url.ok
+    response_retrieve_a_bitlink = requests.get(
+            f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}{parse_url.path}',
+            headers=headers
+    )
+    return response_retrieve_a_bitlink.ok
 
 
 def check_url_accessibility(url):
@@ -40,14 +45,19 @@ def check_url_accessibility(url):
 
 
 if __name__ == '__main__':
-
+    load_dotenv()
+    token = os.getenv("bitly_token")
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
     url = input('Введи ссылку для сокращения: ')
+
     try:
         check_url_accessibility(url)
-        if is_bitlink(url, HEADERS):
-            print('Количество кликов: ', count_clicks(url, HEADERS))
+        if is_bitlink(url, headers):
+            print('Количество кликов: ', count_clicks(url, headers))
         else:
-            print('Битлинк: ', shorten_links(url, HEADERS))
+            print('Битлинк: ', shorten_links(url, headers))
     except requests.exceptions.HTTPError as err:
         print(err.response.status_code)
         if err.response.status_code in [400, 404]:
@@ -58,6 +68,3 @@ if __name__ == '__main__':
             raise
     except requests.exceptions.MissingSchema:
         print('Веедите ссылку в формате https://...')
-
-
-
