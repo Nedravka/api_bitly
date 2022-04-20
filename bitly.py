@@ -1,9 +1,9 @@
 import os
+import argparse
 
 import requests
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-
 
 LINK_API_BITLY = 'https://api-ssl.bitly.com/v4/'
 
@@ -34,8 +34,8 @@ def count_clicks(bitlink, headers):
 def is_bitlink(url, headers):
     parse_url = urlparse(url)
     response_retrieve_a_bitlink = requests.get(
-            f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}{parse_url.path}',
-            headers=headers
+        f'{LINK_API_BITLY}bitlinks/{parse_url.netloc}{parse_url.path}',
+        headers=headers
     )
     return response_retrieve_a_bitlink.ok
 
@@ -44,14 +44,18 @@ def check_url_accessibility(url):
     return requests.get(url).raise_for_status()
 
 
-if __name__ == '__main__':
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('name', nargs='?')
+    return parser
+
+
+def main(url):
     load_dotenv()
     token = os.getenv("bitly_token")
     headers = {
         'Authorization': f'Bearer {token}'
     }
-    url = input('Введи ссылку для сокращения: ')
-
     try:
         check_url_accessibility(url)
         if is_bitlink(url, headers):
@@ -68,3 +72,12 @@ if __name__ == '__main__':
             raise
     except requests.exceptions.MissingSchema:
         print('Веедите ссылку в формате https://...')
+
+
+if __name__ == '__main__':
+    parser = create_parser()
+    namespace = parser.parse_args()
+    if namespace.name:
+        main(url=namespace.name)
+    else:
+        main(url=input('Введи ссылку для сокращения: '))
