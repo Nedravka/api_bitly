@@ -46,13 +46,13 @@ def check_url_accessibility(url):
 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('name', nargs='?')
+    parser.add_argument('url', nargs='?')
     return parser
 
 
 def main(url):
     load_dotenv()
-    token = os.getenv("bitly_token")
+    token = os.getenv("BITLY_TOKEN")
     headers = {
         'Authorization': f'Bearer {token}'
     }
@@ -76,8 +76,8 @@ def main(url):
 
 if __name__ == '__main__':
     parser = create_parser()
-    namespace = parser.parse_args()
-    if namespace.name:
-        main(url=namespace.name)
+    url_arg = parser.parse_args()
+    if url_arg.url:
+        main(url=url_arg.url)
     else:
         main(url=input('Введи ссылку для сокращения: '))
